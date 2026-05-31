@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="הדשבורד">
+<meta name="theme-color" content="#f7f7f5">
+<title>הדשבורד של גיא</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f7f5;
+  --bg2:#ffffff;
+  --bg3:#f0efec;
+  --bg4:#e8e7e3;
+  --border:rgba(0,0,0,.08);
+  --border2:rgba(0,0,0,.13);
+  --text:#111;
+  --text2:#555;
+  --text3:#999;
+  --teal:#0e8f68;
+  --teal-bg:#e6f5f0;
+  --teal-light:#0a7055;
+  --amber:#a06000;
+  --amber-bg:#fef3e2;
+  --red:#b83232;
+  --red-bg:#fdeaea;
+  --blue-bg:#e8f1fd;
+  --blue-text:#1a4f8a;
+  --radius:14px;
+  --rsm:9px;
+  --stb:env(safe-area-inset-bottom,0px);
+  --stt:env(safe-area-inset-top,0px)
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;font-size:16px;overflow-x:hidden}
+body{padding-top:var(--stt);padding-bottom:calc(var(--stb) + 76px)}
+
+.app-header{padding:22px 20px 0;display:flex;align-items:flex-start;justify-content:space-between}
+.greeting{font-size:26px;font-weight:600;line-height:1.1;color:var(--text)}
+.date-sub{font-size:14px;color:var(--text2);margin-top:4px}
+.hbadge{background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px;padding:7px 13px;font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.pdot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:18px 20px 0}
+.metric{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px 18px}
+.metric-num{font-size:34px;font-weight:600;line-height:1}
+.metric-num.t{color:var(--teal)}
+.metric-num.a{color:var(--amber)}
+.metric-lbl{font-size:12px;color:var(--text3);margin-top:6px;letter-spacing:.01em}
+
+.section{padding:26px 20px 0}
+.shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.stitle{font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.07em;text-transform:uppercase}
+.add-btn{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--teal);background:var(--teal-bg);border:0.5px solid rgba(14,143,104,.2);border-radius:20px;padding:5px 12px;cursor:pointer;font-family:inherit;font-weight:500}
+.add-btn:active{background:rgba(14,143,104,.18)}
+
+.pcard{background:var(--bg2);border:0.5px solid var(--border);border-radius:0 var(--radius) var(--radius) 0;padding:15px 16px;margin-bottom:10px;border-right:3px solid transparent}
+.pcard.active{border-right-color:var(--teal)}
+.pcard.slow{border-right-color:var(--amber)}
+.pcard.wait{border-right-color:var(--red)}
+.pcard-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
+.pcard-name{font-size:15px;font-weight:600;color:var(--text);line-height:1.3}
+.chips{display:flex;gap:5px;flex-shrink:0;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px}
+.cb{background:var(--blue-bg);color:var(--blue-text)}
+.cr{background:var(--amber-bg);color:var(--amber)}
+.cp{background:var(--teal-bg);color:var(--teal-light)}
+.ca{background:var(--teal-bg);color:var(--teal-light)}
+.cs{background:var(--amber-bg);color:var(--amber)}
+.cw{background:var(--red-bg);color:var(--red)}
+.pcard-status{font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:7px}
+.pcard-next{display:flex;align-items:flex-start;gap:6px;font-size:13px;color:var(--text3)}
+.pnext-arrow{color:var(--teal);flex-shrink:0;font-size:15px}
+.pbar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:11px}
+.pbar-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .5s ease}
+.pcard-actions{display:flex;gap:2px;margin-top:11px;border-top:0.5px solid var(--border);padding-top:9px}
+.pact{flex:1;font-size:13px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px;border-radius:var(--rsm);display:flex;align-items:center;justify-content:center;gap:4px}
+.pact:active{background:var(--bg3);color:var(--text)}
+
+.twrap{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.trow{display:flex;align-items:flex-start;gap:13px;padding:13px 16px;border-bottom:0.5px solid var(--border)}
+.trow:last-child{border-bottom:none}
+.trow.new{background:#f0faf6}
+.chk{width:21px;height:21px;border-radius:6px;border:1.5px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px}
+.chk.done{background:var(--teal);border-color:var(--teal);color:#fff;font-size:12px}
+.tbody{flex:1;min-width:0}
+.ttext{font-size:14px;color:var(--text);line-height:1.45}
+.ttext.done{text-decoration:line-through;color:var(--text3)}
+.tproj{font-size:12px;color:var(--text3);margin-top:3px}
+.tdel{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;font-size:18px;line-height:1}
+.tdel:active{color:var(--red)}
+
+.crow{display:flex;gap:13px;padding:12px 16px;border-bottom:0.5px solid var(--border);align-items:flex-start}
+.crow:last-child{border-bottom:none}
+.cbox{min-width:42px;text-align:center;background:var(--bg3);border-radius:var(--rsm);padding:6px 5px}
+.cday{font-size:11px;color:var(--text3)}
+.cnum{font-size:19px;font-weight:600;color:var(--text);line-height:1}
+.crow.today .cbox{background:var(--teal-bg)}
+.crow.today .cnum{color:var(--teal)}
+.crow.today .cday{color:var(--teal)}
+.cinfo{flex:1;min-width:0}
+.ctitle{font-size:14px;font-weight:500;color:var(--text)}
+.ctime{font-size:12px;color:var(--text3);margin-top:3px}
+
+.share-section{padding:26px 20px 8px}
+.sbtn{width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:15px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:500;color:var(--text2);cursor:pointer;font-family:inherit}
+.sbtn:active{background:var(--bg3);border-color:var(--teal);color:var(--teal)}
+
+.tab-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(247,247,245,.97);border-top:0.5px solid var(--border);display:flex;padding-bottom:var(--stb);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 0;cursor:pointer;background:none;border:none;font-family:inherit;color:var(--text3);transition:color .15s}
+.tab-item.active,.tab-item:active{color:var(--teal)}
+.tab-icon{font-size:21px;line-height:1}
+.tab-label{font-size:11px;font-weight:500}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:100;align-items:flex-end;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{width:100%;background:var(--bg2);border-radius:22px 22px 0 0;border-top:0.5px solid var(--border);padding:0 0 calc(var(--stb) + 16px);animation:up .25s ease}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mhandle{width:40px;height:4px;background:var(--bg4);border-radius:2px;margin:12px auto 0}
+.mhead{padding:17px 20px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border)}
+.mtitle{font-size:17px;font-weight:600;color:var(--text)}
+.mclose{background:var(--bg3);border:none;color:var(--text2);width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.mbody{padding:18px 20px}
+.ttabs{display:flex;gap:8px;margin-bottom:18px}
+.ttab{flex:1;padding:9px;border-radius:var(--rsm);border:0.5px solid var(--border2);background:none;color:var(--text2);cursor:pointer;font-family:inherit;font-size:14px;transition:all .15s}
+.ttab.active{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:500}
+.flbl{font-size:12px;color:var(--text3);letter-spacing:.03em;margin-bottom:6px;font-weight:500}
+.field{margin-bottom:15px}
+input[type=text],textarea,select{width:100%;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--rsm);color:var(--text);font-family:'Heebo',sans-serif;font-size:15px;padding:11px 13px;outline:none;direction:rtl;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center;padding-left:34px}
+textarea{resize:none;height:72px}
+input:focus,textarea:focus,select:focus{border-color:var(--teal);background:#fff}
+.sbtn-save{width:100%;background:var(--teal);border:none;border-radius:var(--rsm);color:#fff;font-size:16px;font-weight:600;padding:14px;cursor:pointer;font-family:'Heebo',sans-serif;margin-top:4px}
+.sbtn-save:active{opacity:.85}
+.prow{display:flex;align-items:center;gap:10px}
+.prow input[type=range]{flex:1;accent-color:var(--teal)}
+.pval{font-size:14px;color:var(--teal);min-width:38px;font-weight:500}
+.empty{font-size:14px;color:var(--text3);text-align:center;padding:22px}
+.toast{position:fixed;bottom:95px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);border-radius:20px;color:#fff;font-size:13px;padding:10px 18px;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="vhome">
+  <div class="app-header">
+    <div>
+      <div class="greeting" id="greeting"></div>
+      <div class="date-sub" id="dateline"></div>
+    </div>
+    <div class="hbadge"><span class="pdot"></span><span id="open-count">0 פתוח</span></div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-num t" id="m-proj">0</div><div class="metric-lbl">פרויקטים פעילים</div></div>
+    <div class="metric"><div class="metric-num a" id="m-tasks">0</div><div class="metric-lbl">משימות פתוחות</div></div>
+  </div>
+
+  <div class="section">
+    <div class="shead"><span class="stitle">פרויקטים</span><button class="add-btn" onclick="openAdd('project')">+ הוסף</button></div>
+    <div id="proj-list"></div>
+  </div>
+
+  <div class="section">
+    <div class="shead"><span class="stitle">משימות</span><button class="add-btn" onclick="openAdd('task')">+ הוסף</button></div>
+    <div class="twrap" id="task-list"></div>
+  </div>
+
+  <div class="section">
+    <div class="shead"><span class="stitle">לוח שנה</span></div>
+    <div class="twrap" id="cal-list"></div>
+  </div>
+
+  <div class="share-section">
+    <button class="sbtn" onclick="shareWithClaude()">↗&nbsp;&nbsp;שתף עם Claude לעדכון</button>
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div class="overlay" id="ov-add" onclick="closeOv(event,'ov-add')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mhead"><span class="mtitle">הוסף פריט</span><button class="mclose" onclick="closeModal('ov-add')">✕</button></div>
+    <div class="mbody">
+      <div class="ttabs">
+        <button class="ttab active" id="tt-task" onclick="switchTab('task')">משימה</button>
+        <button class="ttab" id="tt-proj" onclick="switchTab('project')">פרויקט</button>
+      </div>
+      <div id="f-task">
+        <div class="field"><div class="flbl">תיאור</div><input type="text" id="inp-task" placeholder="מה צריך לעשות?"></div>
+        <div class="field"><div class="flbl">פרויקט</div><select id="inp-tproj"></select></div>
+        <button class="sbtn-save" onclick="saveTask()">שמור משימה</button>
+      </div>
+      <div id="f-proj" style="display:none">
+        <div class="field"><div class="flbl">שם הפרויקט</div><input type="text" id="inp-pname" placeholder="שם..."></div>
+        <div class="field"><div class="flbl">קטגוריה</div><select id="inp-pcat"><option value="biz">עסקי / יזמות</option><option value="re">נדל"ן</option><option value="per">אישי / משפחה</option></select></div>
+        <div class="field"><div class="flbl">סטטוס נוכחי</div><input type="text" id="inp-pstatus" placeholder="איפה הדברים עומדים..."></div>
+        <div class="field"><div class="flbl">הצעד הבא</div><input type="text" id="inp-pnext" placeholder="מה צריך לקרות..."></div>
+        <div class="field"><div class="flbl">קצב</div><select id="inp-ppulse"><option value="active">פעיל</option><option value="slow">מתקדם לאט</option><option value="wait">ממתין</option></select></div>
+        <button class="sbtn-save" onclick="saveProj()">שמור פרויקט</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="overlay" id="ov-edit" onclick="closeOv(event,'ov-edit')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mhead"><span class="mtitle" id="edit-title">עריכת פרויקט</span><button class="mclose" onclick="closeModal('ov-edit')">✕</button></div>
+    <div class="mbody">
+      <input type="hidden" id="edit-id">
+      <div class="field"><div class="flbl">סטטוס נוכחי</div><textarea id="edit-status"></textarea></div>
+      <div class="field"><div class="flbl">הצעד הבא</div><input type="text" id="edit-next"></div>
+      <div class="field"><div class="flbl">קצב</div><select id="edit-pulse"><option value="active">פעיל</option><option value="slow">מתקדם לאט</option><option value="wait">ממתין</option></select></div>
+      <div class="field"><div class="flbl">התקדמות</div>
+        <div class="prow"><input type="range" id="edit-prog" min="0" max="100" step="5" oninput="document.getElementById('pval').textContent=this.value+'%'"><span class="pval" id="pval">50%</span></div>
+      </div>
+      <button class="sbtn-save" onclick="saveEdit()">שמור שינויים</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="tab-bar">
+  <button class="tab-item active"><span class="tab-icon">⊞</span><span class="tab-label">דשבורד</span></button>
+  <button class="tab-item" onclick="openAdd('task')"><span class="tab-icon">＋</span><span class="tab-label">הוסף</span></button>
+  <button class="tab-item" onclick="shareWithClaude()"><span class="tab-icon">↗</span><span class="tab-label">Claude</span></button>
+</div>
+
+<script>
+const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const CAL=[
+  {title:'Brainstorm Tomer & Guy',num:'31',day:"א'",time:'20:00',today:true},
+  {title:'Functional — NIMIFIT',num:'1',day:"ב'",time:'08:00'},
+  {title:'ערב בבית',num:'1',day:"ב'",time:'20:00'},
+  {title:'ערב רז פרי',num:'2',day:"ג'",time:'19:00'},
+  {title:'חגיגות יום הולדת 35 לבובי',num:'3',day:"ד'",time:'כל היום'},
+  {title:'Functional — NIMIFIT',num:'4',day:"ה'",time:'08:00'},
+  {title:'ערב אצל רז פרי',num:'4',day:"ה'",time:'19:00'},
+  {title:'Brainstorm Tomer & Guy',num:'7',day:"א'",time:'20:00'},
+];
+const DP=[
+  {id:'p1',name:'EZ7 / ליגת פאדל',cat:'biz',status:'בניית מסמכי יסוד ושיחות עם שותפים',next:'סגירת הסכם עם עירן זהבי',pulse:'active',progress:35},
+  {id:'p2',name:'חכירת מגרש — מתקן פאדל',cat:'biz',status:'בדיקת חוזה חכירה, שיפור סעיף פיצויים',next:'שליחת טיוטה מעודכנת לעו"ד',pulse:'slow',progress:50},
+  {id:'p3',name:'נדל"ן ברצלונה — Bassols',cat:'re',status:'שיפוץ בביצוע, הליכים משפטיים פתוחים',next:'עדכון מ-Yogev Tal על מכירה',pulse:'slow',progress:60},
+  {id:'p4',name:'Apple Developer — EZ7 אפליקציה',cat:'biz',status:'הרשמה תקועה — בירור חשבון צוות',next:'פנייה לחבר לסגירת חשבון הישן',pulse:'wait',progress:20},
+  {id:'p5',name:'הצעת נישואין — מילאנו',cat:'per',status:'Casa di Langa ברשימה הקצרה',next:'הזמנת נסיעה וחדר',pulse:'active',progress:40},
+];
+const DT=[
+  {id:'t1',text:'לבדוק עדכון מ-Yogev Tal על מכירת Bassols',proj:'p3',done:false},
+  {id:'t2',text:'לשלוח טיוטת חוזה מעודכנת לעו"ד Union Legal',proj:'p2',done:false},
+  {id:'t3',text:'ליצור קשר לסגירת חשבון Apple Developer',proj:'p4',done:false},
+  {id:'t4',text:'להכין מצגת לדיסקונט טק',proj:'p1',done:false},
+  {id:'t5',text:'להכין מצגת לפגישה עם מורן ויזל',proj:'p1',done:false},
+];
+
+function load(){
+  try{return{projects:JSON.parse(localStorage.getItem('gdash_p3'))||DP,tasks:JSON.parse(localStorage.getItem('gdash_t3'))||DT};}
+  catch(e){return{projects:DP,tasks:DT};}
+}
+function save(d){localStorage.setItem('gdash_p3',JSON.stringify(d.projects));localStorage.setItem('gdash_t3',JSON.stringify(d.tasks));}
+
+function catChip(c){const m={biz:['cb','עסקי'],re:['cr','נדל"ן'],per:['cp','אישי']};const[cls,lbl]=m[c]||['cb',c];return'<span class="chip '+cls+'">'+lbl+'</span>';}
+function pulseChip(p){const m={active:['ca','פעיל'],slow:['cs','לאט'],wait:['cw','ממתין']};const[cls,lbl]=m[p]||['cs',p];return'<span class="chip '+cls+'">'+lbl+'</span>';}
+
+function render(){
+  const d=load();save(d);
+  const now=new Date();
+  const h=now.getHours();
+  const gr=h<5?'לילה טוב':h<12?'בוקר טוב':h<17?'שלום':h<21?'ערב טוב':'לילה טוב';
+  document.getElementById('greeting').textContent=gr+', גיא';
+  document.getElementById('dateline').textContent=DAYS[now.getDay()]+' · '+now.getDate()+' ב'+MONTHS[now.getMonth()];
+  const open=d.tasks.filter(t=>!t.done).length;
+  document.getElementById('open-count').textContent=open+' פתוח';
+  document.getElementById('m-proj').textContent=d.projects.length;
+  document.getElementById('m-tasks').textContent=open;
+  const pm={};d.projects.forEach(p=>pm[p.id]=p.name);
+
+  document.getElementById('proj-list').innerHTML=d.projects.length
+    ?d.projects.map((p,i)=>
+        '<div class="pcard '+p.pulse+'">'
+        +'<div class="pcard-hd"><span class="pcard-name">'+p.name+'</span>'
+        +'<div class="chips">'+catChip(p.cat)+pulseChip(p.pulse)+'</div></div>'
+        +'<div class="pcard-status">'+p.status+'</div>'
+        +'<div class="pcard-next"><span class="pnext-arrow">&#x2192;</span><span>'+p.next+'</span></div>'
+        +'<div class="pbar"><div class="pbar-fill" style="width:'+p.progress+'%"></div></div>'
+        +'<div class="pcard-actions">'
+        +'<button class="pact" onclick="openEdit('+i+')">✏ ערוך</button>'
+        +'<button class="pact" onclick="delProj('+i+')">✕ מחק</button>'
+        +'</div></div>'
+      ).join('')
+    :'<div class="empty">אין פרויקטים</div>';
+
+  document.getElementById('task-list').innerHTML=d.tasks.length
+    ?d.tasks.map((t,i)=>
+        '<div class="trow'+(t.isNew?' new':'') +'">'
+        +'<div class="chk'+(t.done?' done':'')+'" onclick="toggleTask('+i+')">'+(t.done?'✓':'')+'</div>'
+        +'<div class="tbody">'
+        +'<div class="ttext'+(t.done?' done':'')+'">'+t.text+'</div>'
+        +(t.proj&&pm[t.proj]?'<div class="tproj">'+pm[t.proj]+'</div>':'')
+        +'</div>'
+        +'<button class="tdel" onclick="delTask('+i+')">×</button>'
+        +'</div>'
+      ).join('')
+    :'<div class="empty">אין משימות</div>';
+
+  document.getElementById('cal-list').innerHTML=CAL.map(e=>
+    '<div class="crow'+(e.today?' today':'') +'">'
+    +'<div class="cbox"><div class="cday">'+e.day+'</div><div class="cnum">'+e.num+'</div></div>'
+    +'<div class="cinfo"><div class="ctitle">'+e.title+'</div><div class="ctime">'+e.time+'</div></div>'
+    +'</div>'
+  ).join('');
+
+  const sel=document.getElementById('inp-tproj');
+  if(sel)sel.innerHTML='<option value="">— ללא שיוך —</option>'+d.projects.map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join('');
+}
+
+function toggleTask(i){const d=load();d.tasks[i].done=!d.tasks[i].done;d.tasks[i].isNew=false;save(d);render();}
+function delTask(i){const d=load();d.tasks.splice(i,1);save(d);render();toast('משימה נמחקה');}
+function delProj(i){if(!confirm('למחוק פרויקט זה?'))return;const d=load();d.projects.splice(i,1);save(d);render();toast('פרויקט נמחק');}
+
+let addTab='task';
+function openAdd(type){addTab=type;switchTab(type);document.getElementById('ov-add').classList.add('open');}
+function switchTab(t){
+  addTab=t;
+  document.getElementById('f-task').style.display=t==='task'?'block':'none';
+  document.getElementById('f-proj').style.display=t==='project'?'block':'none';
+  document.getElementById('tt-task').className='ttab'+(t==='task'?' active':'');
+  document.getElementById('tt-proj').className='ttab'+(t==='project'?' active':'');
+}
+function saveTask(){
+  const txt=document.getElementById('inp-task').value.trim();
+  if(!txt)return;
+  const d=load();
+  d.tasks.push({id:'t'+Date.now(),text:txt,proj:document.getElementById('inp-tproj').value,done:false,isNew:true});
+  save(d);closeModal('ov-add');render();toast('משימה נוספה ✓');
+  document.getElementById('inp-task').value='';
+}
+function saveProj(){
+  const name=document.getElementById('inp-pname').value.trim();
+  if(!name)return;
+  const d=load();
+  d.projects.push({id:'p'+Date.now(),name,cat:document.getElementById('inp-pcat').value,status:document.getElementById('inp-pstatus').value||'',next:document.getElementById('inp-pnext').value||'',pulse:document.getElementById('inp-ppulse').value,progress:10});
+  save(d);closeModal('ov-add');render();toast('פרויקט נוסף ✓');
+  document.getElementById('inp-pname').value='';document.getElementById('inp-pstatus').value='';document.getElementById('inp-pnext').value='';
+}
+function openEdit(i){
+  const d=load();const p=d.projects[i];
+  document.getElementById('edit-id').value=i;
+  document.getElementById('edit-title').textContent=p.name;
+  document.getElementById('edit-status').value=p.status;
+  document.getElementById('edit-next').value=p.next;
+  document.getElementById('edit-pulse').value=p.pulse;
+  document.getElementById('edit-prog').value=p.progress;
+  document.getElementById('pval').textContent=p.progress+'%';
+  document.getElementById('ov-edit').classList.add('open');
+}
+function saveEdit(){
+  const i=parseInt(document.getElementById('edit-id').value);
+  const d=load();
+  d.projects[i].status=document.getElementById('edit-status').value;
+  d.projects[i].next=document.getElementById('edit-next').value;
+  d.projects[i].pulse=document.getElementById('edit-pulse').value;
+  d.projects[i].progress=parseInt(document.getElementById('edit-prog').value);
+  save(d);closeModal('ov-edit');render();toast('עודכן ✓');
+}
+function closeOv(e,id){if(e.target.id===id)closeModal(id);}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function shareWithClaude(){
+  const d=load();
+  const open=d.tasks.filter(t=>!t.done);
+  const pm={};d.projects.forEach(p=>pm[p.id]=p.name);
+  let txt='📋 הדשבורד שלי — עדכון נוכחי:\n\n';
+  txt+='פרויקטים:\n';
+  d.projects.forEach(p=>{
+    const pl={active:'פעיל',slow:'לאט',wait:'ממתין'}[p.pulse];
+    txt+='• '+p.name+' ['+pl+'] — '+p.status+'. הצעד הבא: '+p.next+'\n';
+  });
+  txt+='\nמשימות פתוחות:\n';
+  open.forEach(t=>txt+='• '+t.text+(t.proj&&pm[t.proj]?' ('+pm[t.proj]+')':'')+'\n');
+  txt+='\nמה לעדכן?';
+  if(navigator.share){navigator.share({title:'הדשבורד של גיא',text:txt}).catch(()=>{});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>toast('הסטטוס הועתק — הדבק ב-Claude'));}
+  else{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('הסטטוס הועתק — הדבק ב-Claude');}
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+render();
+</script>
+</body>
+</html>
