@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="apple-touch-icon" href="logo.jpg">
+<title>EZ7 — דשבורד פרויקטים</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F3; --surface: #FFFFFF; --border: #E4E2DC; --border-strong: #C8C5BC;
+    --text-primary: #1A1916; --text-secondary: #6B6860; --text-muted: #A8A69F;
+    --green: #2D6A4F; --green-bg: #D8F3DC; --amber: #92400E; --amber-bg: #FEF3C7;
+    --accent: #1A1916; --radius: 12px; --radius-sm: 8px;
+  }
+  body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; }
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .logo span { color: var(--text-muted); font-weight: 300; font-size: 14px; margin-right: 10px; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .sync-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #22C55E; animation: pulse 2s infinite; }
+  .live-dot.offline { background: #EF4444; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-primary); font-family: 'Heebo', sans-serif; transition: background 0.15s; }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-primary:hover { background: #333; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .summary-bar { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; text-align: center; }
+  .stat-val { font-size: 28px; font-weight: 600; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { font-size: 13px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 12px; transition: border-color 0.15s; }
+  .card:hover { border-color: var(--border-strong); }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .card-title { font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .badges { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .badge { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .badge-type { background: #F0EFE8; color: var(--text-secondary); border: 1px solid var(--border); }
+  .badge-active { background: var(--green-bg); color: var(--green); }
+  .badge-slow { background: var(--amber-bg); color: var(--amber); }
+  .badge-waiting { background: #FCE7F3; color: #9D174D; }
+  .progress-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .progress-track { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+  .progress-pct { font-size: 12px; color: var(--text-muted); min-width: 32px; text-align: left; }
+  .info-row { font-size: 13px; color: var(--text-secondary); margin-bottom: 5px; display: flex; gap: 6px; align-items: baseline; }
+  .info-row strong { color: var(--text-primary); font-weight: 500; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .tasks-section { direction: rtl; }
+  .tasks-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; margin-top: 8px; }
+
+  /* Task table */
+  .tasks-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tasks-table th { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: right; padding: 4px 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  .tasks-table th:first-child { width: 24px; }
+  .tasks-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); vertical-align: top; color: var(--text-secondary); }
+  .tasks-table tr:last-child td { border-bottom: none; }
+  .tasks-table tr:hover td { background: #FAFAF8; }
+  .task-cb { width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 4px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; margin: 0 auto; }
+  .task-cb:hover { border-color: var(--accent); }
+  .task-cb.done { background: var(--accent); border-color: var(--accent); }
+  .task-cb.done::after { content: '✓'; color: white; font-size: 10px; }
+  .task-name { font-weight: 500; color: var(--text-primary); }
+  .task-name.done { text-decoration: line-through; color: var(--text-muted); font-weight: 400; }
+  .task-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .task-meta { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .task-owner { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--text-secondary); }
+  .task-actions-col { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+  tr:hover .task-actions-col { opacity: 1; }
+  .task-action-btn { cursor: pointer; font-size: 12px; padding: 2px 5px; border-radius: 4px; line-height: 1; border: none; background: none; }
+  .task-action-btn:hover { background: var(--border); }
+
+  .status-item { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; font-size: 13px; color: var(--text-primary); }
+  .status-check { color: var(--green); font-size: 14px; flex-shrink: 0; }
+  .add-task-row { display: flex; gap: 6px; margin-top: 10px; }
+  .add-task-input { flex: 1; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Heebo', sans-serif; color: var(--text-primary); background: var(--bg); direction: rtl; outline: none; }
+  .add-task-input:focus { border-color: var(--accent); }
+  .add-task-input::placeholder { color: var(--text-muted); }
+  .add-task-owner { width: 90px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; font-family: 'Heebo', sans-serif; color: var(--text-primary); background: var(--bg); direction: rtl; outline: none; flex-shrink: 0; }
+  .add-task-owner:focus { border-color: var(--accent); }
+  .add-task-owner::placeholder { color: var(--text-muted); }
+  .add-task-type { padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; font-family: 'Heebo', sans-serif; color: var(--text-secondary); background: var(--bg); direction: rtl; outline: none; cursor: pointer; flex-shrink: 0; }
+  .add-task-type:focus { border-color: var(--accent); }
+
+  /* Modals */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; direction: rtl; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
+  .field-group { margin-bottom: 1rem; }
+  .field-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-bottom: 4px; display: block; }
+  .field-input, .field-select, .field-textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Heebo', sans-serif; color: var(--text-primary); background: var(--bg); direction: rtl; outline: none; }
+  .field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--accent); }
+  .field-textarea { resize: vertical; min-height: 60px; }
+  .progress-input { width: 100%; accent-color: var(--accent); }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-start; margin-top: 1.25rem; flex-wrap: wrap; }
+
+  /* AI */
+  .ai-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-top: 1.5rem; }
+  .ai-panel-header { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; }
+  .ai-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 600; }
+  .ai-title { font-size: 14px; font-weight: 600; }
+  .ai-subtitle { font-size: 12px; color: var(--text-secondary); }
+  .ai-input-row { display: flex; gap: 8px; }
+  .ai-input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Heebo', sans-serif; color: var(--text-primary); background: var(--bg); direction: rtl; outline: none; }
+  .ai-input:focus { border-color: var(--accent); }
+  .ai-response { margin-top: 12px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); font-size: 13px; line-height: 1.6; display: none; white-space: pre-wrap; direction: rtl; }
+  .ai-response.visible { display: block; }
+  .loading-dots span { animation: blink 1.2s infinite; font-size: 18px; color: var(--text-muted); }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+  .last-updated { font-size: 11px; color: var(--text-muted); text-align: left; margin-top: 1rem; }
+  .archive-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); direction: rtl; }
+  .archive-item:last-child { border-bottom: none; }
+  .archive-item-info { flex: 1; }
+  .archive-item-name { font-size: 13px; color: var(--text-secondary); text-decoration: line-through; }
+  .archive-item-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 10px; }
+  .archive-project { font-size: 11px; color: var(--text-muted); background: var(--bg); border-radius: 10px; padding: 2px 8px; border: 1px solid var(--border); white-space: nowrap; }
+  .checkpoint-box { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px; display: block !important; }
+  .checkpoint-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+  .checkpoint-textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Heebo', sans-serif; color: var(--text-primary); background: #FFFDF5; direction: rtl; outline: none; resize: none; min-height: 70px; line-height: 1.6; transition: border-color 0.15s; display: block !important; box-sizing: border-box; }
+  .checkpoint-textarea:focus { border-color: var(--amber); background: #FFFEF8; }
+  .checkpoint-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+  .checkpoint-save { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-align: left; height: 14px; }
+  .archive-empty { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 13px; }
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 10px 20px; border-radius: var(--radius-sm); font-size: 13px; opacity: 0; transition: opacity 0.3s; z-index: 300; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  .task-type-badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 500; white-space: nowrap; background: #EEF2FF; color: #3730A3; border: 1px solid #C7D2FE; }
+  .task-type-badge.לוגיסטיקה { background: #FEF3C7; color: #92400E; border-color: #FDE68A; }
+  .task-type-badge.שיווק { background: #FCE7F3; color: #9D174D; border-color: #FBCFE8; }
+  .task-type-badge.הפקה { background: #D8F3DC; color: #2D6A4F; border-color: #B7EBC0; }
+  .task-type-badge.תוכן { background: #EEF2FF; color: #3730A3; border-color: #C7D2FE; }
+  .task-type-badge.תחרות { background: #FFF7ED; color: #C2410C; border-color: #FED7AA; }
+  @media (max-width: 600px) {
+    header { padding: 1rem; } .container { padding: 1rem; } .stat-val { font-size: 22px; }
+    .tasks-table th.hide-mobile, .tasks-table td.hide-mobile { display: none; }
+    .task-actions-col { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">EZ7 <span>דשבורד פרויקטים</span></div>
+  <div class="header-right">
+    <div class="sync-status">
+      <span class="live-dot" id="sync-dot"></span>
+      <span id="sync-label">מתחבר...</span>
+    </div>
+    <a class="btn btn-sm" href="league-calculator.html" style="text-decoration:none;">🎾 מחשבון ליגה</a>
+    <button class="btn btn-sm" onclick="openArchive()">📦 ארכיון</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddProject()">+ פרויקט חדש</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="summary-bar">
+    <div class="stat"><div class="stat-val" id="stat-projects">—</div><div class="stat-label">פרויקטים</div></div>
+    <div class="stat"><div class="stat-val" id="stat-avg">—</div><div class="stat-label">התקדמות ממוצעת</div></div>
+    <div class="stat"><div class="stat-val" id="stat-tasks">—</div><div class="stat-label">משימות פתוחות</div></div>
+  </div>
+  <div class="section-header"><span class="section-title">פרויקטים פעילים</span></div>
+  <div id="projects-container"><div style="text-align:center;padding:2rem;color:var(--text-muted)">טוען...</div></div>
+
+  <div class="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-icon">AI</div>
+      <div><div class="ai-title">עוזר AI</div><div class="ai-subtitle">שאל שאלה על הפרויקטים</div></div>
+    </div>
+    <div class="ai-input-row">
+      <input class="ai-input" id="ai-input" placeholder="למשל: מה המשימות הדחופות ביותר?" onkeydown="if(event.key==='Enter') askAI()" />
+      <button class="btn btn-primary" onclick="askAI()">שאל</button>
+    </div>
+    <div class="ai-response" id="ai-response"></div>
+  </div>
+  <div class="last-updated" id="last-updated"></div>
+</div>
+
+<!-- Project Modal -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <h3 id="modal-title">עריכת פרויקט</h3>
+    <div class="field-group"><label class="field-label">שם פרויקט</label><input class="field-input" id="edit-name" /></div>
+    <div class="field-group"><label class="field-label">סוג</label>
+      <select class="field-select" id="edit-type"><option>עסקי</option><option>נדל"ן</option><option>אישי</option><option>טכנולוגי</option></select>
+    </div>
+    <div class="field-group"><label class="field-label">סטטוס</label>
+      <select class="field-select" id="edit-status"><option value="active">פעיל</option><option value="slow">מתקדם לאט</option><option value="waiting">ממתין</option></select>
+    </div>
+    <div class="field-group"><label class="field-label">סטטוס נוכחי (תיאור)</label><textarea class="field-textarea" id="edit-current-status"></textarea></div>
+    <div class="field-group"><label class="field-label">הצעד הבא</label><input class="field-input" id="edit-next-step" /></div>
+    <div class="field-group">
+      <label class="field-label">התקדמות: <span id="edit-pct-label">0%</span></label>
+      <input type="range" class="progress-input" id="edit-pct" min="0" max="100" step="5" oninput="document.getElementById('edit-pct-label').textContent=this.value+'%'" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveEdit()">שמור</button>
+      <button class="btn" onclick="closeModal()">ביטול</button>
+      <button class="btn" style="margin-right:auto;color:#B91C1C;border-color:#FECACA" onclick="deleteProject()">מחק פרויקט</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="task-modal" onclick="closeTaskModal(event)">
+  <div class="modal">
+    <h3 id="task-modal-title">עריכת משימה</h3>
+    <div class="field-group"><label class="field-label">שם משימה</label><input class="field-input" id="task-edit-text" /></div>
+    <div class="field-group"><label class="field-label">סוג</label>
+      <select class="field-select" id="task-edit-type">
+        <option value="">— ללא סוג —</option>
+        <option value="לוגיסטיקה">לוגיסטיקה</option>
+        <option value="שיווק">שיווק</option>
+        <option value="הפקה">הפקה</option>
+        <option value="תוכן">תוכן</option>
+        <option value="תחרות">תחרות</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">תיאור</label><textarea class="field-textarea" id="task-edit-desc" placeholder="פרטים נוספים..."></textarea></div>
+    <div class="field-group"><label class="field-label">אחראי</label><input class="field-input" id="task-edit-owner" placeholder="שם האחראי..." /></div>
+    <div class="field-group"><label class="field-label">תאריך הוספה</label><input class="field-input" id="task-edit-date" type="date" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveTaskEdit()">שמור</button>
+      <button class="btn" onclick="closeTaskModal()">ביטול</button>
+      <button class="btn" style="margin-right:auto;color:#B91C1C;border-color:#FECACA" onclick="deleteTaskFromModal()">מחק משימה</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Archive Modal -->
+<div class="modal-overlay" id="archive-modal" onclick="closeArchiveModal(event)">
+  <div class="modal" style="max-width:600px">
+    <h3>📦 ארכיון משימות</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:1rem">משימות שהושלמו</p>
+    <div id="archive-list"></div>
+    <div class="modal-footer" style="margin-top:1rem">
+      <button class="btn" onclick="closeArchiveModal()">סגור</button>
+      <button class="btn" style="color:#B91C1C;border-color:#FECACA;margin-right:auto" onclick="clearArchive()">נקה ארכיון</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://lmpfvtbsisvwvsuumkja.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtcGZ2dGJzaXN2d3ZzdXVta2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0MjQ3NDIsImV4cCI6MjA5NzAwMDc0Mn0.MkrkrlL9_HRTBJMf3e2HXuHbEUOrMjH0Id3xoq5uWxM';
+const HEADERS = { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+
+const today = new Date().toISOString().split('T')[0];
+
+const DEFAULT_PROJECTS = [
+  { id: 1, name: 'EZ7 / ליגת פאדל', type: 'עסקי', status: 'active', currentStatus: 'בניית מסמכי יסוד ושיחות עם שותפים', nextStep: 'מעקב והצעה מורן ויזל', pct: 35,
+    checkpoint: '', statuses: ['ספונסרים — דיסקונט, פוטר לוקר, טמפו, רכב ערן','הזמנת מגרש — מציאת אחסון','אפליקציה — סיום אפיון מיקלה ורישום אפל'],
+    tasks: [
+      {text:'מעקב והצעה מורן ויזל',done:false,owner:'',desc:'',type:'',date:today},
+      {text:'ערן — חיבור ראשון לציון',done:false,owner:'',desc:'',date:today},
+      {text:'פתיחת חברה וחשבון בנק',done:false,owner:'',desc:'',date:today},
+      {text:'כתיבת קונספט 2-3 טורנירים יומיים ערן',done:false,owner:'',desc:'',date:today},
+      {text:'סיום וידיאו ערן — עדן וענבר',done:false,owner:'',desc:'',date:today}
+    ]
+  },
+  { id: 2, name: 'חכירת מגרש — מתקן פאדל', type: 'עסקי', status: 'slow', currentStatus: 'ממתין להזמנת מגרש + במה', nextStep: 'שליחת טיוטה מעודכנת לעו"ד', pct: 50, checkpoint: '', statuses: [],
+    tasks: [
+      {text:'מציאת מקום אחסון',done:false,owner:'',desc:'',date:today},
+      {text:'הצעת מחיר עמילות מכס',done:false,owner:'',desc:'',date:today},
+      {text:'רישוי?',done:false,owner:'',desc:'',date:today,question:true}
+    ]
+  },
+  { id: 3, name: 'Apple Developer — EZ7 אפליקציה', type: 'עסקי', status: 'active', currentStatus: 'סיום אפיון ורישום באפל, אפיון מול אור דימרי', nextStep: 'סיום אפיון מיקלה', pct: 20, checkpoint: '',
+    statuses: ['סיום אפיון ורישום באפל','אפיון מול אור דימרי'],
+    tasks: [
+      {text:'סיום אפיון מיקלה',done:false,owner:'מיקלה',desc:'',date:today},
+      {text:'כתיבת אפיון רעיון כללי — אור דמרי',done:false,owner:'אור דמרי',desc:'',date:today},
+      {text:'רישום אפל',done:false,owner:'',desc:'',date:today},
+      {text:'תרגום לעברית',done:false,owner:'',desc:'',date:today}
+    ]
+  }
+];
+
+let projects = [];
+let archive = [];
+let editingId = null;
+let rowId = null;
+let editingTaskPid = null;
+let editingTaskIdx = null;
+
+function markCheckpointDirty(pid) {
+  const el = document.getElementById('cp-status-' + pid);
+  if (el) el.textContent = 'לא נשמר...';
+}
+
+function saveCheckpoint(pid) {
+  const ta = document.getElementById('cp-' + pid);
+  if (!ta) return;
+  const p = projects.find(x => x.id === pid);
+  if (p) {
+    p.checkpoint = ta.value;
+    saveToSupabase();
+    const el = document.getElementById('cp-status-' + pid);
+    if (el) { el.textContent = 'נשמר ✓'; setTimeout(() => { if(el) el.textContent = ''; }, 2000); }
+  }
+}
+
+function loadArchive() {
+  try { archive = JSON.parse(localStorage.getItem('ez7_archive') || '[]'); } catch(e) { archive = []; }
+}
+
+function saveArchive() {
+  localStorage.setItem('ez7_archive', JSON.stringify(archive));
+}
+
+function openArchive() {
+  const list = document.getElementById('archive-list');
+  if (archive.length === 0) {
+    list.innerHTML = '<div class="archive-empty">אין משימות בארכיון עדיין</div>';
+  } else {
+    // Group by project
+    const grouped = {};
+    archive.forEach(t => {
+      if (!grouped[t.projectName]) grouped[t.projectName] = [];
+      grouped[t.projectName].push(t);
+    });
+    list.innerHTML = Object.entries(grouped).map(([proj, tasks]) => `
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">${proj}</div>
+        ${tasks.map((t, i) => `
+        <div class="archive-item">
+          <div class="archive-item-info">
+            <div class="archive-item-name">${t.text}</div>
+            <div class="archive-item-meta">
+              ${t.owner ? '<span>👤 ' + t.owner + '</span>' : ''}
+              ${t.type ? '<span>🏷️ ' + t.type + '</span>' : ''}
+              ${t.completedAt ? '<span>✓ ' + new Date(t.completedAt).toLocaleDateString("he-IL") + '</span>' : ''}
+            </div>
+          </div>
+          <button class="btn btn-sm" onclick="restoreTask('${proj}', ${archive.indexOf(t)})" title="שחזר">↩️</button>
+        </div>`).join('')}
+      </div>`).join('');
+  }
+  document.getElementById('archive-modal').classList.add('open');
+}
+
+function restoreTask(projectName, archiveIdx) {
+  const task = archive[archiveIdx];
+  if (!task) return;
+  const p = projects.find(x => x.name === projectName);
+  if (p) {
+    const { completedAt, projectName: pn, ...restored } = task;
+    restored.done = false;
+    p.tasks.push(restored);
+    archive.splice(archiveIdx, 1);
+    render(); saveToSupabase(); saveArchive(); closeArchiveModal(); toast('משימה שוחזרה ✓');
+  }
+}
+
+function clearArchive() {
+  if (!confirm('למחוק את כל הארכיון?')) return;
+  archive = [];
+  saveArchive();
+  openArchive();
+  toast('ארכיון נוקה');
+}
+
+function closeArchiveModal(e) {
+  if (e && e.target !== document.getElementById('archive-modal')) return;
+  document.getElementById('archive-modal').classList.remove('open');
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function setSyncStatus(online, label) {
+  document.getElementById('sync-dot').className = 'live-dot' + (online ? '' : ' offline');
+  document.getElementById('sync-label').textContent = label;
+}
+
+async function loadFromSupabase() {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/projects?select=*&order=id.asc&limit=1', { headers: HEADERS });
+    if (!res.ok) throw new Error();
+    const rows = await res.json();
+    if (rows.length === 0) { await initSupabase(); return; }
+    rowId = rows[0].id;
+    const incoming = rows[0].data;
+    // migrate old tasks without new fields
+    incoming.forEach(p => p.tasks.forEach(t => {
+      if (!t.date) t.date = today;
+      if (t.owner === undefined) t.owner = '';
+      if (t.desc === undefined) t.desc = '';
+      if (t.type === undefined) t.type = '';
+    if (p.checkpoint === undefined) p.checkpoint = '';
+    }));
+    if (JSON.stringify(incoming) !== JSON.stringify(projects)) { projects = incoming; render(); }
+    setSyncStatus(true, 'מסונכרן');
+  } catch(e) { setSyncStatus(false, 'לא מחובר'); }
+}
+
+async function initSupabase() {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/projects', {
+    method: 'POST', headers: { ...HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify({ data: DEFAULT_PROJECTS })
+  });
+  const rows = await res.json();
+  rowId = rows[0].id; projects = DEFAULT_PROJECTS; render();
+}
+
+async function saveToSupabase() {
+  if (!rowId) return;
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/projects?id=eq.' + rowId, {
+      method: 'PATCH', headers: { ...HEADERS, 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ data: projects, updated_at: new Date().toISOString() })
+    });
+    setSyncStatus(true, 'מסונכרן');
+    document.getElementById('last-updated').textContent = 'עודכן: ' + new Date().toLocaleString('he-IL');
+  } catch(e) { setSyncStatus(false, 'שגיאה בשמירה'); }
+}
+
+function statusLabel(s) {
+  if (s === 'active') return { text: 'פעיל', cls: 'badge-active' };
+  if (s === 'slow') return { text: 'מתקדם לאט', cls: 'badge-slow' };
+  return { text: 'ממתין', cls: 'badge-waiting' };
+}
+function progressColor(pct) {
+  if (pct >= 60) return '#2D6A4F';
+  if (pct >= 35) return '#92400E';
+  return '#9D174D';
+}
+function fmtDate(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('he-IL', {day:'numeric',month:'numeric',year:'2-digit'}); } catch(e) { return d; }
+}
+
+function render() {
+  const container = document.getElementById('projects-container');
+  const openTasks = projects.reduce((a, p) => a + p.tasks.filter(t => !t.done).length, 0);
+  const avgPct = projects.length ? Math.round(projects.reduce((a, p) => a + p.pct, 0) / projects.length) : 0;
+  document.getElementById('stat-projects').textContent = projects.length;
+  document.getElementById('stat-avg').textContent = avgPct + '%';
+  document.getElementById('stat-tasks').textContent = openTasks;
+
+  container.innerHTML = projects.map(p => {
+    const sl = statusLabel(p.status);
+    const color = progressColor(p.pct);
+    const statusesHtml = p.statuses && p.statuses.length ? `
+      <div class="tasks-label">סטטוסים</div>
+      ${p.statuses.map(s => `<div class="status-item"><span class="status-check">✓</span><span>${s}</span></div>`).join('')}` : '';
+
+    const tasksHtml = p.tasks.length ? `
+      <div class="tasks-label" style="margin-top:${p.statuses&&p.statuses.length?'10px':'0'}">משימות</div>
+      <table class="tasks-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>משימה</th>
+            <th class="hide-mobile">סוג</th>
+            <th class="hide-mobile">אחראי</th>
+            <th class="hide-mobile">תאריך</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${p.tasks.map((t, i) => `
+          <tr>
+            <td><div class="task-cb" onclick="toggleTask(${p.id}, ${i})" title="סמן כבוצע ✓"></div></td>
+            <td>
+              <div class="task-name ${t.done ? 'done' : ''}">${t.text}</div>
+              ${t.desc ? `<div class="task-desc">${t.desc}</div>` : ''}
+            </td>
+            <td class="hide-mobile task-meta">${t.type ? `<span class="task-type-badge ${t.type}">${t.type}</span>` : '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td class="hide-mobile task-meta">${t.owner || '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td class="hide-mobile task-meta">${fmtDate(t.date)}</td>
+            <td><div class="task-actions-col">
+              <button class="task-action-btn" onclick="openTaskEdit(${p.id}, ${i})" title="ערוך">✏️</button>
+              <button class="task-action-btn" onclick="deleteTask(${p.id}, ${i})" title="מחק">🗑️</button>
+            </div></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>` : '';
+
+    return `
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">${p.name}</div>
+        <button class="btn btn-sm" onclick="openEdit(${p.id})">✏️ ערוך</button>
+      </div>
+      <div class="badges">
+        <span class="badge badge-type">${p.type}</span>
+        <span class="badge ${sl.cls}">${sl.text}</span>
+      </div>
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" style="width:${p.pct}%;background:${color}"></div></div>
+        <span class="progress-pct">${p.pct}%</span>
+      </div>
+      ${p.currentStatus ? `<div class="info-row">סטטוס: <strong>${p.currentStatus}</strong></div>` : ''}
+      ${p.nextStep ? `<div class="info-row">הצעד הבא: <strong>${p.nextStep}</strong></div>` : ''}
+      <hr class="divider">
+      <div class="checkpoint-box">
+        <div class="checkpoint-label">📍 נקודת התחלה</div>
+        <textarea class="checkpoint-textarea" id="cp-${p.id}" placeholder="כתוב כאן את המחשבה האחרונה שלך לפני שסוגר את היום..." onblur="saveCheckpoint(${p.id})" oninput="markCheckpointDirty(${p.id})">${p.checkpoint || ''}</textarea>
+        <div class="checkpoint-save" id="cp-status-${p.id}"></div>
+      </div>
+      <div class="tasks-section" style="margin-top:12px">
+        ${statusesHtml}
+        ${tasksHtml}
+        <div class="add-task-row">
+          <input class="add-task-input" id="ti-${p.id}" placeholder="הוסף משימה..." onkeydown="if(event.key==='Enter') addTask(${p.id})" />
+          <input class="add-task-owner" id="to-${p.id}" placeholder="אחראי" />
+          <select class="add-task-type" id="tt-${p.id}">
+            <option value="">סוג</option>
+            <option value="לוגיסטיקה">לוגיסטיקה</option>
+            <option value="שיווק">שיווק</option>
+            <option value="הפקה">הפקה</option>
+            <option value="תוכן">תוכן</option>
+            <option value="תחרות">תחרות</option>
+          </select>
+          <button class="btn btn-sm" onclick="addTask(${p.id})">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTask(pid, idx) {
+  const p = projects.find(x => x.id === pid);
+  if (!p) return;
+  const task = p.tasks[idx];
+  // Move to archive
+  const archivedTask = { ...task, projectName: p.name, completedAt: new Date().toISOString() };
+  archive.push(archivedTask);
+  p.tasks.splice(idx, 1);
+  render(); saveToSupabase(); saveArchive(); toast('משימה הועברה לארכיון 📦');
+}
+
+function addTask(pid) {
+  const input = document.getElementById('ti-' + pid);
+  const typeEl = document.getElementById('tt-' + pid);
+  const ownerEl = document.getElementById('to-' + pid);
+  const text = input.value.trim();
+  if (!text) return;
+  const taskType = typeEl ? typeEl.value : '';
+  const taskOwner = ownerEl ? ownerEl.value.trim() : '';
+  const p = projects.find(x => x.id === pid);
+  if (p) {
+    p.tasks.push({ text, done: false, owner: taskOwner, desc: '', type: taskType, date: today });
+    render(); saveToSupabase(); toast('משימה נוספה ✓');
+  }
+}
+
+function deleteTask(pid, idx) {
+  const p = projects.find(x => x.id === pid);
+  if (p) { p.tasks.splice(idx, 1); render(); saveToSupabase(); toast('משימה נמחקה'); }
+}
+
+// Task edit modal
+function openTaskEdit(pid, idx) {
+  editingTaskPid = pid;
+  editingTaskIdx = idx;
+  const p = projects.find(x => x.id === pid);
+  const t = p.tasks[idx];
+  document.getElementById('task-modal-title').textContent = 'עריכת משימה';
+  document.getElementById('task-edit-text').value = t.text;
+  document.getElementById('task-edit-type').value = t.type || '';
+  document.getElementById('task-edit-desc').value = t.desc || '';
+  document.getElementById('task-edit-owner').value = t.owner || '';
+  document.getElementById('task-edit-date').value = t.date || today;
+  document.getElementById('task-modal').classList.add('open');
+}
+
+function saveTaskEdit() {
+  const text = document.getElementById('task-edit-text').value.trim();
+  if (!text) return;
+  const p = projects.find(x => x.id === editingTaskPid);
+  if (p && editingTaskIdx !== null) {
+    p.tasks[editingTaskIdx].text = text;
+    p.tasks[editingTaskIdx].type = document.getElementById('task-edit-type').value;
+    p.tasks[editingTaskIdx].desc = document.getElementById('task-edit-desc').value.trim();
+    p.tasks[editingTaskIdx].owner = document.getElementById('task-edit-owner').value.trim();
+    p.tasks[editingTaskIdx].date = document.getElementById('task-edit-date').value;
+    render(); saveToSupabase(); closeTaskModal(); toast('משימה עודכנה ✓');
+  }
+}
+
+function deleteTaskFromModal() {
+  const p = projects.find(x => x.id === editingTaskPid);
+  if (p && editingTaskIdx !== null) {
+    p.tasks.splice(editingTaskIdx, 1);
+    render(); saveToSupabase(); closeTaskModal(); toast('משימה נמחקה');
+  }
+}
+
+function closeTaskModal(e) {
+  if (e && e.target !== document.getElementById('task-modal')) return;
+  document.getElementById('task-modal').classList.remove('open');
+  editingTaskPid = null; editingTaskIdx = null;
+}
+
+// Project modal
+function openEdit(pid) {
+  editingId = pid;
+  const p = projects.find(x => x.id === pid);
+  if (!p) return;
+  document.getElementById('modal-title').textContent = 'עריכת פרויקט';
+  document.getElementById('edit-name').value = p.name;
+  document.getElementById('edit-type').value = p.type;
+  document.getElementById('edit-status').value = p.status;
+  document.getElementById('edit-current-status').value = p.currentStatus || '';
+  document.getElementById('edit-next-step').value = p.nextStep || '';
+  document.getElementById('edit-pct').value = p.pct;
+  document.getElementById('edit-pct-label').textContent = p.pct + '%';
+  document.getElementById('modal').classList.add('open');
+}
+
+function openAddProject() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = 'פרויקט חדש';
+  ['edit-name','edit-current-status','edit-next-step'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('edit-type').value = 'עסקי';
+  document.getElementById('edit-status').value = 'active';
+  document.getElementById('edit-pct').value = 0;
+  document.getElementById('edit-pct-label').textContent = '0%';
+  document.getElementById('modal').classList.add('open');
+}
+
+function saveEdit() {
+  const name = document.getElementById('edit-name').value.trim();
+  if (!name) return;
+  if (editingId) {
+    const p = projects.find(x => x.id === editingId);
+    if (p) {
+      p.name = name; p.type = document.getElementById('edit-type').value;
+      p.status = document.getElementById('edit-status').value;
+      p.currentStatus = document.getElementById('edit-current-status').value;
+      p.nextStep = document.getElementById('edit-next-step').value;
+      p.pct = parseInt(document.getElementById('edit-pct').value);
+    }
+  } else {
+    const newId = Math.max(0, ...projects.map(p => p.id)) + 1;
+    projects.push({ id: newId, name, type: document.getElementById('edit-type').value, status: document.getElementById('edit-status').value, currentStatus: document.getElementById('edit-current-status').value, nextStep: document.getElementById('edit-next-step').value, pct: parseInt(document.getElementById('edit-pct').value), statuses: [], tasks: [] });
+  }
+  render(); saveToSupabase(); closeModal(); toast('נשמר ✓');
+}
+
+function deleteProject() {
+  if (!editingId) return;
+  if (!confirm('למחוק את הפרויקט?')) return;
+  projects = projects.filter(p => p.id !== editingId);
+  render(); saveToSupabase(); closeModal(); toast('פרויקט נמחק');
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal')) return;
+  document.getElementById('modal').classList.remove('open');
+}
+
+async function askAI() {
+  const input = document.getElementById('ai-input');
+  const responseEl = document.getElementById('ai-response');
+  const question = input.value.trim();
+  if (!question) return;
+  responseEl.className = 'ai-response visible';
+  responseEl.innerHTML = '<div class="loading-dots"><span>•</span><span>•</span><span>•</span></div>';
+  input.value = '';
+  const summary = projects.map(p => `פרויקט: ${p.name}\nסטטוס: ${p.currentStatus||'—'}\nהתקדמות: ${p.pct}%\nהצעד הבא: ${p.nextStep||'—'}\nמשימות פתוחות: ${p.tasks.filter(t=>!t.done).map(t=>`${t.text}${t.owner?' (אחראי: '+t.owner+')':''}`).join(', ')||'אין'}`).join('\n---\n');
+  try {
+    const payload = {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1000,
+      system: 'אתה עוזר עסקי של גיא פטיזר. ענה בעברית, קצר וממוקד.\n\nנתוני פרויקטים:\n' + summary,
+      messages: [{ role: 'user', content: question }]
+    };
+    const res = await fetch('https://ez7-ai-proxy.petizer.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { responseEl.textContent = 'שגיאת שרת: ' + res.status; return; }
+    const data = await res.json();
+    if (data.error) { responseEl.textContent = 'שגיאה: ' + data.error.message; return; }
+    responseEl.textContent = data.content?.find(b => b.type === 'text')?.text || 'לא התקבלה תשובה.';
+  } catch(e) { responseEl.textContent = 'שגיאה בחיבור ל-AI.'; }
+}
+
+loadArchive();
+loadFromSupabase();
+setInterval(loadFromSupabase, 10000);
+</script>
+</body>
+</html>
